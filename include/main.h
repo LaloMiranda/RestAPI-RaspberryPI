@@ -31,4 +31,14 @@ int callback_users_default (const struct _u_request * request, struct _u_respons
  */
 char* getCurrentTime();
 
+/**
+ * @brief Get the Current Temperature of the Raspi
+ * 
+ * @return char* 
+ */
+char* getCurrentTemp();
+
+char* getMemUsage();
+
+char* getNWord(char* line, const char* delim, int N);
 #endif

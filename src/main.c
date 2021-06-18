@@ -42,23 +42,23 @@ int callback_get_users(const struct _u_request * request, struct _u_response * r
   //Creo un jsonArray
   json_t* jsonArray = json_array();
   //Estructuras de json para carga de datos
-  json_t* js;
+  json_t* js, *jsResponse;
 
-  char line[STR_SIZE];
+  
+  char* tempStr;
+  tempStr = getCurrentTemp();
+  js = json_pack("{s:s}", "Temperature", tempStr);
+  json_array_append(jsonArray, js);
 
-  FILE *fp;
-  fp = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
-  fgets(line, STR_SIZE, fp);
-  fclose(fp);
+  tempStr = getMemUsage();
+  js = json_pack("{s:s}", "RAM usage", tempStr);
+  json_array_append(jsonArray, js);
+  
 
-  double temp = atoi(line) * 0.001;
-  char tempStr[STR_SIZE];
-
-  sprintf(tempStr, "%0.2f °C", temp);
-
-  js = json_pack("{s:s}", "Temperatura", tempStr);
+  
+  jsResponse = json_pack("{s:o}", "Data", jsonArray);
  
-  ulfius_set_json_body_response(response, 200, js);
+  ulfius_set_json_body_response(response, 200, jsResponse);
 
   //ulfius_set_string_body_response(response, 404, "Here will be my state");
   return U_CALLBACK_CONTINUE;
@@ -80,4 +80,51 @@ char* getCurrentTime(){
   sprintf(currentTime, "%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
   return currentTime;
+}
+
+char* getCurrentTemp(){
+  char line[STR_SIZE];
+
+  FILE *fp;
+  fp = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+  fgets(line, STR_SIZE, fp);
+  fclose(fp);
+
+  double temp = atoi(line) * 0.001;
+  char* tempStr;
+  tempStr = malloc(sizeof(char)*STR_SIZE);
+
+  sprintf(tempStr, "%0.2f °C", temp);
+
+  return tempStr;
+}
+
+char* getMemUsage(){
+  char line[STR_SIZE];
+  float totalMem, freeMem;
+
+  char* tempStr;
+  tempStr = malloc(sizeof(char)*STR_SIZE);
+
+  FILE *fp;
+  fp = fopen("/proc/meminfo", "r");
+  fgets(line, STR_SIZE, fp);
+  totalMem = (float)atoi(getNWord(line, " ", 2)) / 1048576;
+  fgets(line, STR_SIZE, fp);
+  freeMem = (float)atoi(getNWord(line, " ", 2)) / 1048576;
+  fclose(fp);
+
+  sprintf(tempStr, "%0.2f %%", freeMem/totalMem);
+  return tempStr;
+}
+
+char* getNWord(char* line, const char* delim, int N){
+  char* token;
+  token = strtok(line, delim);
+  N--;
+  while(N > 0){
+    token = strtok(NULL, delim);
+    N--;
+  }
+  return token;
 }
