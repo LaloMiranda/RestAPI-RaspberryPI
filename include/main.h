@@ -6,8 +6,11 @@
 #include <pwd.h>
 #include <string.h>
 #include <time.h>
+#include <fcntl.h>
 
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/sysinfo.h>
 
 /**
  * Callback function for the web application on /helloworld url call
@@ -41,4 +44,6 @@ char* getCurrentTemp();
 char* getMemUsage();
 
 char* getNWord(char* line, const char* delim, int N);
+
+char* getCPULoad();
 #endif

@@ -53,6 +53,10 @@ int callback_get_users(const struct _u_request * request, struct _u_response * r
   tempStr = getMemUsage();
   js = json_pack("{s:s}", "RAM usage", tempStr);
   json_array_append(jsonArray, js);
+
+  tempStr = getCPULoad();
+  js = json_pack("{s:s}", "CPU usage", tempStr);
+  json_array_append(jsonArray, js);
   
 
   
@@ -87,6 +91,9 @@ char* getCurrentTemp(){
 
   FILE *fp;
   fp = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+  if(fp == NULL){
+    return NULL;
+  }
   fgets(line, STR_SIZE, fp);
   fclose(fp);
 
@@ -108,6 +115,9 @@ char* getMemUsage(){
 
   FILE *fp;
   fp = fopen("/proc/meminfo", "r");
+  if(fp == NULL){
+    return NULL;
+  }
   fgets(line, STR_SIZE, fp);
   totalMem = (float)atoi(getNWord(line, " ", 2)) / 1048576;
   fgets(line, STR_SIZE, fp);
@@ -115,6 +125,26 @@ char* getMemUsage(){
   fclose(fp);
 
   sprintf(tempStr, "%0.2f %%", freeMem/totalMem);
+  return tempStr;
+}
+
+char* getCPULoad() {
+  char line[STR_SIZE];
+  double load;
+
+  char* tempStr;
+  tempStr = malloc(sizeof(char)*STR_SIZE);
+
+  FILE *fp;
+  fp = fopen("/proc/loadavg", "r");
+  if(fp == NULL){
+    return NULL;
+  }
+  fgets(line, STR_SIZE, fp);
+  load = atof(getNWord(line, " ", 1)) * 100 / get_nprocs();
+	fclose(fp);
+
+	sprintf(tempStr,"%0.2f %%", load);
   return tempStr;
 }
 
